@@ -22,7 +22,7 @@ if not is_production or is_production == "0":
 
 # disable flask development server logging
 logger = logging.getLogger("werkzeug")
-logger.setLevel(logging.WARNING)
+logger.disabled = True
 
 # this is to prevent the service from sleeping in free hostings ervices
 run_server()
@@ -285,7 +285,6 @@ async def main() -> None:
                 m = await ping_server()
             except Exception as e:
                 await log(client, str(e))
-                pass
 
     asyncio.create_task(keep_up())
     try:

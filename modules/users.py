@@ -59,20 +59,21 @@ async def start_handler(
 
     # Bot is not configured yet
     if not config or not config["assessment_form_link"] or not config["staff_chat_id"]:
-        return await message.reply("عذراً، البوت تحت الصيانة الرجاء المحاولة لاحقاً 😇.")
-
+        await message.reply("عذراً، البوت تحت الصيانة الرجاء المحاولة لاحقاً 😇.")
+        return
     # general assembly chat membership check is required
     if config["ga_chat_id"]:
         try:
             await client.get_chat_member(config["ga_chat_id"], user.id)
         except errors.UserNotParticipant:
             await message.reply(
-                "عذراً ❌، هذه الخدمة متاحة حالياً لطلّاب كلية الطب جامعة الخرطوم، إذا كنت طالباً في كلية الطب جامعة الخرطوم الرجاء التأكد من أنّك تراسل البوت من خلال حسابك الموجود في مجموعة الجمعيِّة العمومية لرابطة طلاب كلية الطب جامعة الخرطوم على تيليجرام."
+                "عذراً ❌، هذه الخدمة متاحة حالياً لطلّاب كلية الطب جامعة الخرطوم، إذا كنت طالباً في كلية الطب جامعة الخرطوم الرجاء التأكد من أنّك تراسل البوت من خلال حسابك الموجود في مجموعة الجمعيِّة العمومية لرابطة طلاب كلية الطب جامعة الخرطوم على تيليجرام (Kmsa Community)."
             )
             return
         except (errors.ChannelIdInvalid, errors.ChatIdInvalid):
             await log(
-                "Please insure the bot is still in the general assembly group, it wans't able to check a user membership."
+                client,
+                "Please ensure the bot is still in the general assembly group, it wans't able to check a user membership.",
             )
         except Exception as e:
             await log(client, str(e))
