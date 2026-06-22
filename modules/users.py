@@ -280,7 +280,7 @@ async def contact_staff_handler(
         )
 
     except Exception as e:
-        print(f"Bot wasn't able to send message in staff chat, it says: {e}")
+        await log(f"Bot wasn't able to send message in staff chat, it says: {e}")
         callback_answer.message.edit_text(
             "عذراً، البوت تحت الصيانة حاليا ❌.\n" "الرجاء المحاولة لاحقاً."
         )

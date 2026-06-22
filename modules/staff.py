@@ -1,6 +1,7 @@
 import asyncio
 import re
 
+import nanoid
 from pymongo import MongoClient
 from pyrogram import Client, enums, errors, filters, types
 
@@ -29,11 +30,12 @@ async def reply_handler(client: Client, message: types.Message, db_client: Mongo
             f"Sorry, There is no user with the serial number: {serial_number}"
         )
 
+    reply_id = nanoid.generate(size=10)
     confirm_button = types.InlineKeyboardButton(
-        "Confirm ✅", callback_data="confirm_reply"
+        "Confirm ✅", callback_data=f"confirm_reply_{reply_id}"
     )
     cancel_button = types.InlineKeyboardButton(
-        "Cancel ❌", callback_data="cancel_reply"
+        "Cancel ❌", callback_data=f"cancel_reply_{reply_id}"
     )
     options_keyboard = types.InlineKeyboardMarkup([[confirm_button], [cancel_button]])
 
@@ -47,19 +49,19 @@ async def reply_handler(client: Client, message: types.Message, db_client: Mongo
     )
 
     callback_answer = await client.listen(
-        filters=filters.regex(r"^confirm_reply$|^cancel_reply$"),
+        filters=filters.regex(rf"^confirm_reply_{reply_id}$|^cancel_reply_{reply_id}$"),
         chat_id=message.chat.id,
         user_id=message.from_user.id,
         listener_type=enums.ListenerTypes.CALLBACK_QUERY,
     )
 
-    if callback_answer.data == "confirm_reply":
+    if callback_answer.data == f"confirm_reply_{reply_id}":
         try:
             await client.send_message(
                 user_in_db["_id"], "<b>لقد استلمت رداً من فريق MASA:</b>"
             )
             await client.send_message(user_in_db["_id"], reply_text)
-        except errors.UserIsBlocked:
+        except errors.UserIsBlocked as e:
             print(
                 f"Bot wasn't able to send message to user {user_in_db['_id']}, it says: {e}"
             )
@@ -139,10 +141,13 @@ async def send_handler(client: Client, message: types.Message, db_client: MongoC
     if message_to_user.text and message_to_user.text.lower() == "cancel":
         return await message_to_user.reply("Sending Cancelled ✅")
 
+    message_id = nanoid.generate(size=10)
     confirm_button = types.InlineKeyboardButton(
-        "Confirm ✅", callback_data="confirm_send"
+        "Confirm ✅", callback_data=f"confirm_send_{message_id}"
     )
-    cancel_button = types.InlineKeyboardButton("Cancel ❌", callback_data="cancel_send")
+    cancel_button = types.InlineKeyboardButton(
+        "Cancel ❌", callback_data=f"cancel_send_{message_id}"
+    )
     options_keyboard = types.InlineKeyboardMarkup([[confirm_button], [cancel_button]])
 
     sample_message = await message_to_user.copy(message.chat.id)
@@ -153,7 +158,9 @@ async def send_handler(client: Client, message: types.Message, db_client: MongoC
 
     try:
         callback_answer = await client.listen(
-            filters=filters.regex(r"^confirm_send$|^cancel_send$"),
+            filters=filters.regex(
+                rf"^confirm_send_{message_id}$|^cancel_send_{message_id}$"
+            ),
             chat_id=message.chat.id,
             user_id=message.from_user.id,
             listener_type=enums.ListenerTypes.CALLBACK_QUERY,
@@ -164,16 +171,16 @@ async def send_handler(client: Client, message: types.Message, db_client: MongoC
     if not callback_answer:
         return
 
-    if callback_answer.data == "cancel_send":
+    if callback_answer.data == f"cancel_send_{message_id}":
         return await callback_answer.message.edit_text("Sending Cancelled ✅")
 
-    if callback_answer.data == "confirm_send":
+    if callback_answer.data == f"confirm_send_{message_id}":
         try:
             await client.send_message(
                 user_in_db["_id"], "<b>لقد استلمت رسالة من فريق MASA:</b>"
             )
             await sample_message.copy(user_in_db["_id"])
-        except errors.UserIsBlocked:
+        except errors.UserIsBlocked as e:
             print(
                 f"Bot wasn't able to send message to user {user_in_db['_id']}, it says: {e}"
             )
